@@ -75,9 +75,27 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             font-family: 'Orbitron', sans-serif;
             font-size: 24px;
             font-weight: 900;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(206, 17, 65, 0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover .logo-img {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .logo span {
             background: linear-gradient(135deg, var(--rockets-red), var(--nuggets-gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -511,6 +529,11 @@
                 font-size: 18px;
             }
 
+            .logo-img {
+                width: 32px;
+                height: 32px;
+            }
+
             .game-container {
                 padding: 80px 15px 30px;
             }
@@ -582,6 +605,168 @@
             }
         }
 
+        /* 配置输入框 */
+        .config-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .config-modal.hidden {
+            display: none;
+        }
+
+        .config-container {
+            background: linear-gradient(135deg, rgba(14, 34, 64, 0.8), rgba(206, 17, 65, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .config-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--rockets-red), var(--nuggets-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .config-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .form-input, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--rockets-red);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(206, 17, 65, 0.1);
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .team-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .team-section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--nuggets-gold);
+            letter-spacing: 1px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .form-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--rockets-red);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .config-button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .config-button.primary {
+            background: linear-gradient(135deg, var(--rockets-red), #ff1744);
+            color: white;
+            box-shadow: 0 4px 20px rgba(206, 17, 65, 0.4);
+        }
+
+        .config-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(206, 17, 65, 0.6);
+        }
+
+        .config-button.secondary {
+            background: linear-gradient(135deg, var(--nuggets-blue), var(--nuggets-light-blue));
+            color: white;
+            box-shadow: 0 4px 20px rgba(14, 34, 64, 0.4);
+        }
+
+        .config-button.secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(29, 66, 138, 0.6);
+        }
+
         /* 加载动画 */
         .loader {
             position: fixed;
@@ -595,13 +780,36 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 30px;
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         .loader.hidden {
             opacity: 0;
             visibility: hidden;
+        }
+
+        .loader-logo {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            animation: logoFloat 2s ease-in-out infinite;
+        }
+
+        .loader-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(206, 17, 65, 0.5));
+        }
+
+        @keyframes logoFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
         }
 
         .loader-ball {
@@ -622,6 +830,16 @@
             font-size: 14px;
             letter-spacing: 4px;
             color: var(--text-secondary);
+            animation: textPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
         }
 
         /* 数字滚动动画 */
@@ -687,8 +905,70 @@
     </style>
 </head>
 <body>
+    <!-- 配置输入框 -->
+    <div class="config-modal" id="configModal">
+        <div class="config-container">
+            <div class="config-title">比赛配置</div>
+            <form class="config-form" id="configForm">
+                <div class="form-group">
+                    <label class="form-label">比赛类型</label>
+                    <input type="text" class="form-input" id="gameType" value="Regular Season" placeholder="例如: Regular Season, Playoffs">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">比赛日期</label>
+                    <input type="text" class="form-input" id="gameDate" value="MARCH 4, 2026" placeholder="例如: MARCH 4, 2026">
+                </div>
+
+                <div class="team-section">
+                    <div class="team-section-title">主队信息</div>
+                    <div class="form-group">
+                        <label class="form-label">球队名称</label>
+                        <select class="form-select" id="team1Name">
+                            <option value="">选择球队...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">比分</label>
+                        <input type="number" class="form-input" id="team1Score" value="120" min="0" max="200">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="form-checkbox" id="team1Winner" checked>
+                        <label class="form-label" for="team1Winner" style="margin: 0; cursor: pointer;">获胜队伍</label>
+                    </div>
+                </div>
+
+                <div class="team-section">
+                    <div class="team-section-title">客队信息</div>
+                    <div class="form-group">
+                        <label class="form-label">球队名称</label>
+                        <select class="form-select" id="team2Name">
+                            <option value="">选择球队...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">比分</label>
+                        <input type="number" class="form-input" id="team2Score" value="115" min="0" max="200">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="form-checkbox" id="team2Winner">
+                        <label class="form-label" for="team2Winner" style="margin: 0; cursor: pointer;">获胜队伍</label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="config-button secondary" id="confirmBtn">确定</button>
+                    <button type="button" class="config-button primary" id="confirmRecordBtn">确定并录屏</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- 加载画面 -->
     <div class="loader" id="loader">
+        <div class="loader-logo">
+            <img src="img/logo1.png" alt="Logo">
+        </div>
         <div class="loader-ball"></div>
         <div class="loader-text">LOADING</div>
     </div>
@@ -699,7 +979,10 @@
 
     <!-- 导航 -->
     <nav class="nav-header">
-        <div class="logo">篮球小报</div>
+        <div class="logo">
+            <img src="img/logo1.png" alt="Logo" class="logo-img">
+            <span>篮球小报</span>
+        </div>
         <div class="live-badge">
             <span class="live-dot"></span>
             <span>LIVE</span>
@@ -794,7 +1077,7 @@
         }
 
         // ========== 比赛配置（只需修改这里）==========
-        const gameConfig = {
+        let gameConfig = {
             gameType: 'Regular Season',        // 比赛类型
             gameDate: 'MARCH 4, 2026',         // 比赛日期
             team1: {
@@ -808,6 +1091,63 @@
                 isWinner: false
             }
         };
+
+        // 初始化配置表单
+        function initConfigForm() {
+            const team1Select = document.getElementById('team1Name');
+            const team2Select = document.getElementById('team2Name');
+
+            // 填充球队选项
+            nbaTeams.forEach(team => {
+                const option1 = document.createElement('option');
+                option1.value = team.name;
+                option1.textContent = team.name;
+                team1Select.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = team.name;
+                option2.textContent = team.name;
+                team2Select.appendChild(option2);
+            });
+
+            // 设置默认值
+            team1Select.value = 'Houston Rockets';
+            team2Select.value = 'Denver Nuggets';
+
+            // 获胜者复选框互斥
+            const team1WinnerCheckbox = document.getElementById('team1Winner');
+            const team2WinnerCheckbox = document.getElementById('team2Winner');
+
+            team1WinnerCheckbox.addEventListener('change', () => {
+                if (team1WinnerCheckbox.checked) {
+                    team2WinnerCheckbox.checked = false;
+                }
+            });
+
+            team2WinnerCheckbox.addEventListener('change', () => {
+                if (team2WinnerCheckbox.checked) {
+                    team1WinnerCheckbox.checked = false;
+                }
+            });
+        }
+
+        // 从表单获取配置
+        function getConfigFromForm() {
+            return {
+                gameType: document.getElementById('gameType').value,
+                gameDate: document.getElementById('gameDate').value,
+                team1: {
+                    teamName: document.getElementById('team1Name').value,
+                    score: parseInt(document.getElementById('team1Score').value),
+                    isWinner: document.getElementById('team1Winner').checked
+                },
+                team2: {
+                    teamName: document.getElementById('team2Name').value,
+                    score: parseInt(document.getElementById('team2Score').value),
+                    isWinner: document.getElementById('team2Winner').checked
+                }
+            };
+        }
 
         // 自动填充完整的球队信息
         function initTeamData() {
@@ -834,9 +1174,6 @@
                 };
             }
         }
-
-        // 初始化球队数据
-        initTeamData();
 
         // 初始化页面数据
         function initGameData() {
@@ -884,11 +1221,24 @@
             }
         }
 
-        // 页面加载完成后执行
-        window.addEventListener('load', () => {
+        // 启动应用
+        function startApp(shouldRecord = false) {
+            // 获取配置
+            gameConfig = getConfigFromForm();
+            
+            // 初始化球队数据
+            initTeamData();
+            
+            // 隐藏配置框
+            document.getElementById('configModal').classList.add('hidden');
+            
+            // 显示加载器
+            document.getElementById('loader').classList.remove('hidden');
+            
             // 初始化数据
             initGameData();
-            // 隐藏加载器
+            
+            // 隐藏加载器并启动动画
             setTimeout(() => {
                 document.getElementById('loader').classList.add('hidden');
                 
@@ -906,7 +1256,28 @@
                     animateScores();
                 }, 800);
 
+                // 如果需要录屏
+                if (shouldRecord) {
+                    setTimeout(() => {
+                        startRecording();
+                    }, 1500);
+                }
             }, 1000);
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('load', () => {
+            // 初始化配置表单
+            initConfigForm();
+            
+            // 绑定按钮事件
+            document.getElementById('confirmBtn').addEventListener('click', () => {
+                startApp(false);
+            });
+
+            document.getElementById('confirmRecordBtn').addEventListener('click', () => {
+                startApp(true);
+            });
         });
 
         // 比分滚动动画
@@ -980,6 +1351,124 @@
         }
 
         createParticles();
+
+        // ========== 录屏功能（录制当前标签页）==========
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        // 开始录屏
+        async function startRecording() {
+            if (isRecording) {
+                console.log('已在录屏中');
+                return;
+            }
+
+            try {
+                // 请求录制当前标签页
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        displaySurface: 'browser', // 优先选择浏览器标签页
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    },
+                    audio: false,
+                    preferCurrentTab: true // Chrome 支持优先当前标签页
+                });
+
+                recordedChunks = [];
+                
+                // 检测支持的 MIME 类型
+                let mimeType = 'video/webm;codecs=vp9';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'video/webm;codecs=vp8';
+                }
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'video/webm';
+                }
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    videoBitsPerSecond: 2500000
+                });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // 创建下载链接
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `NBA_Recording_${new Date().getTime()}.webm`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // 释放资源
+                    URL.revokeObjectURL(url);
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    console.log('录屏已保存');
+                };
+
+                // 监听用户手动停止分享
+                stream.getVideoTracks()[0].addEventListener('ended', () => {
+                    if (isRecording) {
+                        stopRecording();
+                    }
+                });
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordingIndicator.style.display = 'flex';
+                console.log('开始录屏当前页面');
+
+            } catch (error) {
+                console.error('录屏失败:', error);
+                if (error.name === 'NotAllowedError') {
+                    alert('录屏被取消或拒绝');
+                } else {
+                    alert('录屏失败：' + error.message);
+                }
+            }
+        }
+
+        // 停止录屏
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) {
+                console.log('当前没有进行录屏');
+                return;
+            }
+
+            mediaRecorder.stop();
+            isRecording = false;
+            recordingIndicator.style.display = 'none';
+            console.log('停止录屏');
+        }
+
+        // 监听键盘事件
+        document.addEventListener('keydown', (event) => {
+            // Ctrl+A 开始录屏
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                startRecording();
+            }
+            
+            // Ctrl+S 停止录屏
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                stopRecording();
+            }
+        });
+
+        console.log('录屏功能已加载：Ctrl+A 开始录屏，Ctrl+S 停止录屏（请在弹窗中选择"此标签页"）');
     </script>
 </body>
 </html>
