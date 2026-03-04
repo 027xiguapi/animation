@@ -140,6 +140,7 @@
             flex-direction: column;
             justify-content: center;
             padding: 100px 20px 40px;
+            overflow: auto;
         }
 
         /* 比赛信息 */
@@ -1219,7 +1220,7 @@
         }
 
         // 启动应用
-        function startApp(shouldRecord = false) {
+        async function startApp(shouldRecord = false) {
             // 获取配置
             gameConfig = getConfigFromForm();
             
@@ -1228,6 +1229,18 @@
             
             // 隐藏配置框
             document.getElementById('configModal').classList.add('hidden');
+            
+            // 如果需要录屏，先开始录屏，等录屏开始后再显示内容
+            if (shouldRecord) {
+                try {
+                    await startRecording();
+                    // 录屏开始后，等待 500ms 再显示内容
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    console.error('录屏启动失败:', error);
+                    // 即使录屏失败，也继续显示内容
+                }
+            }
             
             // 显示加载器
             document.getElementById('loader').classList.remove('hidden');
@@ -1252,13 +1265,6 @@
                 setTimeout(() => {
                     animateScores();
                 }, 800);
-
-                // 如果需要录屏
-                if (shouldRecord) {
-                    setTimeout(() => {
-                        startRecording();
-                    }, 1500);
-                }
             }, 1000);
         }
 
@@ -1355,7 +1361,7 @@
         async function startRecording() {
             if (isRecording) {
                 console.log('已在录屏中');
-                return;
+                return Promise.resolve();
             }
 
             try {
@@ -1421,8 +1427,10 @@
 
                 mediaRecorder.start();
                 isRecording = true;
-                recordingIndicator.style.display = 'flex';
                 console.log('开始录屏当前页面');
+                
+                // 返回 Promise，表示录屏已成功开始
+                return Promise.resolve();
 
             } catch (error) {
                 console.error('录屏失败:', error);
@@ -1431,6 +1439,8 @@
                 } else {
                     alert('录屏失败：' + error.message);
                 }
+                // 抛出错误，让调用方知道录屏失败
+                throw error;
             }
         }
 
@@ -1443,7 +1453,6 @@
 
             mediaRecorder.stop();
             isRecording = false;
-            recordingIndicator.style.display = 'none';
             console.log('停止录屏');
         }
 
