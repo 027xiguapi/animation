@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>NBA 球星卡 | 全屏选择</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --neon-blue: #00d4ff;
+            --neon-cyan: #00fff9;
+            --neon-gold: #ffd700;
+            --neon-orange: #ff6b35;
+            --dark-bg: #050817;
+            --card-bg: #0a0e27;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--dark-bg);
+            font-family: 'Noto Sans SC', sans-serif;
+            touch-action: pan-y;
+        }
+
+        /* 背景效果 */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .gradient-orb:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            background: var(--neon-blue);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .gradient-orb:nth-child(2) {
+            width: 250px;
+            height: 250px;
+            background: var(--neon-gold);
+            bottom: -80px;
+            left: -80px;
+            animation-delay: 2s;
+        }
+
+        .gradient-orb:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background: var(--neon-cyan);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* 扫描线 */
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            animation: scan 3s linear infinite;
+            opacity: 0.6;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* 顶部状态栏 */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .counter {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .counter span {
+            color: var(--neon-gold);
+            font-weight: 700;
+        }
+
+        /* 主滑动容器 */
+        .slider-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .slider-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        /* 全屏球星卡片 */
+        .player-card {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片背景渐变 */
+        .player-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(0,212,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .player-card.active::before {
+            opacity: 1;
+        }
+
+        /* 球星编号 */
+        .card-number {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: rgba(255,255,255,0.05);
+            z-index: 1;
+        }
+
+        /* 稀有度标签 */
+        .rarity-badge {
+            position: absolute;
+            top: 100px;
+            left: 30px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            z-index: 10;
+            text-transform: uppercase;
+        }
+
+        .rarity-UR {
+            background: linear-gradient(135deg, #ff006e, #ff4d9e);
+            box-shadow: 0 0 20px rgba(255,0,110,0.5);
+            animation: pulse-rarity 2s infinite;
+        }
+
+        .rarity-SSR {
+            background: linear-gradient(135deg, var(--neon-gold), var(--neon-orange));
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+            color: #000;
+        }
+
+        .rarity-SR {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            box-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+
+        @keyframes pulse-rarity {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,110,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,0,110,0.8); }
+        }
+
+        /* 球星头像区域 */
+        .avatar-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin-bottom: 40px;
+            z-index: 5;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: rotate-ring 10s linear infinite;
+        }
+
+        @keyframes rotate-ring {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .avatar-inner-ring {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,212,255,0.3);
+            animation: rotate-ring-reverse 15s linear infinite;
+        }
+
+        @keyframes rotate-ring-reverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,0,0,0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8rem;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(0,212,255,0.3);
+            box-shadow: 0 0 40px rgba(0,212,255,0.3);
+        }
+
+        .avatar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* 球星信息 */
+        .player-info {
+            text-align: center;
+            z-index: 5;
+            width: 100%;
+        }
+
+        .player-name {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+            letter-spacing: 2px;
+        }
+
+        .player-team {
+            font-size: 1rem;
+            color: var(--neon-cyan);
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .player-nickname {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        /* 属性面板 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-gold);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 底部控制区 */
+        .controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .indicators {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            transform: scale(1.3);
+        }
+
+        .btn-random {
+            width: 100%;
+            max-width: 300px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            border: none;
+            border-radius: 30px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,212,255,0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-random:active {
+            transform: scale(0.95);
+        }
+
+        .btn-random::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-random:hover::before,
+        .btn-random:active::before {
+            left: 100%;
+        }
+
+        .btn-random:disabled {
+            opacity: 0.6;
+        }
+
+        .hint-text {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+        }
+
+        /* 随机选择动画遮罩 */
+        .random-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .random-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .random-content {
+            text-align: center;
+        }
+
+        .random-emoji {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+
+        .random-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-cyan);
+            letter-spacing: 3px;
+        }
+
+        /* 选中结果弹窗 */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s;
+        }
+
+        .result-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .result-content {
+            width: 90%;
+            max-width: 350px;
+            background: linear-gradient(145deg, rgba(0,212,255,0.1), rgba(0,0,0,0.9));
+            border: 2px solid var(--neon-cyan);
+            border-radius: 25px;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .result-modal.show .result-content {
+            transform: scale(1);
+        }
+
+        .result-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .result-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-gold), var(--neon-orange));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin: 20px auto;
+            box-shadow: 0 0 30px rgba(255,215,0,0.5);
+            animation: result-pulse 2s infinite;
+        }
+
+        @keyframes result-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(255,215,0,0.5); transform: scale(1); }
+            50% { box-shadow: 0 0 50px rgba(255,215,0,0.8); transform: scale(1.05); }
+        }
+
+        .result-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .result-team {
+            font-size: 0.9rem;
+            color: var(--neon-cyan);
+            margin-bottom: 25px;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .result-stat-box {
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 12px 8px;
+        }
+
+        .result-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--neon-gold);
+            font-weight: 700;
+        }
+
+        .result-stat-label {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 25px;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm:active {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+
+        /* 粒子效果 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-gold);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        /* 滑动提示 */
+        .swipe-hint {
+            position: fixed;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            animation: swipe-pulse 2s infinite;
+            z-index: 90;
+        }
+
+        @keyframes swipe-pulse {
+            0%, 100% { opacity: 0.4; transform: translateX(-50%) translateX(0); }
+            50% { opacity: 0.8; transform: translateX(-50%) translateX(10px); }
+        }
+
+        .swipe-hint::before {
+            content: '←';
+        }
+
+        .swipe-hint::after {
+            content: '→';
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- 背景效果 -->
+    <div class="bg-effects">
+        <div class="gradient-orb"></div>
+        <div class="gradient-orb"></div>
+        <div class="gradient-orb"></div>
+    </div>
+
+    <!-- 扫描线 -->
+    <div class="scan-line"></div>
+
+    <!-- 粒子容器 -->
+    <div class="particles" id="particles"></div>
+
+    <!-- 顶部状态栏 -->
+    <div class="status-bar">
+        <div class="logo">NBA STAR</div>
+        <div class="counter"><span id="currentIndex">1</span> / <span id="totalCount">12</span></div>
+    </div>
+
+    <!-- 主滑动区域 -->
+    <div class="slider-container" id="sliderContainer">
+        <div class="slider-track" id="sliderTrack">
+            <!-- 卡片将由JS生成 -->
+        </div>
+    </div>
+
+    <!-- 滑动提示 -->
+    <div class="swipe-hint">滑动切换</div>
+
+    <!-- 底部控制 -->
+    <div class="controls">
+        <div class="indicators" id="indicators"></div>
+        <button class="btn-random" id="btnRandom">🎲 随机选择</button>
+        <div class="hint-text">点击按钮或左右滑动浏览</div>
+    </div>
+
+    <!-- 随机选择遮罩 -->
+    <div class="random-overlay" id="randomOverlay">
+        <div class="random-content">
+            <div class="random-emoji" id="randomEmoji">🏀</div>
+            <div class="random-text">SELECTING...</div>
+        </div>
+    </div>
+
+    <!-- 结果弹窗 -->
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="result-badge" id="resultBadge">SSR</div>
+            <div class="result-avatar" id="resultAvatar">👑</div>
+            <div class="result-name" id="resultName">球星名称</div>
+            <div class="result-team" id="resultTeam">球队名称</div>
+            <div class="result-stats">
+                <div class="result-stat-box">
+                    <div class="result-stat-value" id="stat1">99</div>
+                    <div class="result-stat-label">综合评分</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="result-stat-value" id="stat2">S</div>
+                    <div class="result-stat-label">稀有度</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="result-stat-value" id="stat3">A+</div>
+                    <div class="result-stat-label">潜力值</div>
+                </div>
+            </div>
+            <button class="btn-confirm" id="btnConfirm">确认收录</button>
+        </div>
+    </div>
+
+    <script>
+        // 球星数据
+        const players = [
+            { name: "勒布朗·詹姆斯", team: "洛杉矶湖人", emoji: "👑", rarity: "SSR", stats: [98, "S+", "A+"], nickname: "小皇帝", color: "#ffd700" },
+            { name: "斯蒂芬·库里", team: "金州勇士", emoji: "🎯", rarity: "SSR", stats: [96, "S+", "A"], nickname: "三分之神", color: "#00d4ff" },
+            { name: "凯文·杜兰特", team: "菲尼克斯太阳", emoji: "🐍", rarity: "SSR", stats: [96, "S", "A"], nickname: "死神", color: "#ff6b35" },
+            { name: "扬尼斯·阿德托昆博", team: "密尔沃基雄鹿", emoji: "🦌", rarity: "SSR", stats: [97, "S+", "A+"], nickname: "希腊怪兽", color: "#00ff88" },
+            { name: "尼古拉·约基奇", team: "丹佛掘金", emoji: "🃏", rarity: "SSR", stats: [97, "S+", "A+"], nickname: "小丑", color: "#9b59b6" },
+            { name: "卢卡·东契奇", team: "达拉斯独行侠", emoji: "✨", rarity: "SSR", stats: [95, "S", "A+"], nickname: "神奇小子", color: "#00d4ff" },
+            { name: "乔尔·恩比德", team: "费城76人", emoji: "🔔", rarity: "SSR", stats: [94, "S", "A"], nickname: "过程", color: "#e74c3c" },
+            { name: "杰森·塔图姆", team: "波士顿凯尔特人", emoji: "☘️", rarity: "SSR", stats: [93, "S", "A+"], nickname: "JT", color: "#00ff88" },
+            { name: "谢伊·吉尔杰斯-亚历山大", team: "俄克拉荷马雷霆", emoji: "⚡", rarity: "SR", stats: [92, "A+", "A+"], nickname: "SGA", color: "#00d4ff" },
+            { name: "安东尼·爱德华兹", team: "明尼苏达森林狼", emoji: "🐺", rarity: "SR", stats: [91, "A+", "S"], nickname: "蚁人", color: "#9b59b6" },
+            { name: "维克托·文班亚马", team: "圣安东尼奥马刺", emoji: "🦋", rarity: "UR", stats: [90, "S", "S+"], nickname: "外星人", color: "#ff006e" },
+            { name: "多诺万·米切尔", team: "克利夫兰骑士", emoji: "🕷️", rarity: "SR", stats: [91, "A+", "A"], nickname: "蜘蛛侠", color: "#e74c3c" }
+        ];
+
+        let currentIndex = 0;
+        let isAnimating = false;
+        let startX = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+
+        // 初始化
+        function init() {
+            renderCards();
+            renderIndicators();
+            updateCounter();
+            setupEventListeners();
+        }
+
+        // 渲染卡片
+        function renderCards() {
+            const track = document.getElementById('sliderTrack');
+            track.innerHTML = players.map((player, index) => `
+                <div class="player-card ${index === 0 ? 'active' : ''}" data-index="${index}">
+                    <div class="card-number">${String(index + 1).padStart(2, '0')}</div>
+                    <div class="rarity-badge rarity-${player.rarity}">${player.rarity}</div>
+                    <div class="avatar-container">
+                        <div class="avatar-inner-ring"></div>
+                        <div class="avatar-ring"></div>
+                        <div class="avatar">${player.emoji}</div>
+                    </div>
+                    <div class="player-info">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-team">${player.team}</div>
+                        <div class="player-nickname">"${player.nickname}"</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">${player.stats[0]}</div>
+                                <div class="stat-label">综合</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${player.stats[1]}</div>
+                                <div class="stat-label">稀有</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${player.stats[2]}</div>
+                                <div class="stat-label">潜力</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染指示器
+        function renderIndicators() {
+            const indicators = document.getElementById('indicators');
+            indicators.innerHTML = players.map((_, index) => `
+                <div class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+            `).join('');
+        }
+
+        // 更新计数器
+        function updateCounter() {
+            document.getElementById('currentIndex').textContent = currentIndex + 1;
+            document.getElementById('totalCount').textContent = players.length;
+
+            // 更新指示器
+            document.querySelectorAll('.dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+
+            // 更新卡片active状态
+            document.querySelectorAll('.player-card').forEach((card, index) => {
+                card.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        // 滑动到指定卡片
+        function slideTo(index) {
+            if (index < 0) index = 0;
+            if (index >= players.length) index = players.length - 1;
+
+            currentIndex = index;
+            currentTranslate = -currentIndex * window.innerWidth;
+            prevTranslate = currentTranslate;
+
+            const track = document.getElementById('sliderTrack');
+            track.style.transform = `translateX(${currentTranslate}px)`;
+
+            updateCounter();
+        }
+
+        // 随机选择
+        async function randomSelect() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const btn = document.getElementById('btnRandom');
+            const overlay = document.getElementById('randomOverlay');
+            const randomEmoji = document.getElementById('randomEmoji');
+
+            btn.disabled = true;
+            overlay.classList.add('show');
+
+            // 快速滚动动画
+            const duration = 2000;
+            const startTime = Date.now();
+            let lastUpdate = 0;
+
+            while (Date.now() - startTime < duration) {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+
+                // 逐渐减慢速度
+                const delay = 50 + (progress * 300);
+
+                if (Date.now() - lastUpdate > delay) {
+                    const randomIndex = Math.floor(Math.random() * players.length);
+                    randomEmoji.textContent = players[randomIndex].emoji;
+                    lastUpdate = Date.now();
+                }
+
+                await new Promise(r => requestAnimationFrame(r));
+            }
+
+            // 最终结果
+            const finalIndex = Math.floor(Math.random() * players.length);
+            const player = players[finalIndex];
+
+            overlay.classList.remove('show');
+
+            // 滑动到选中的卡片
+            slideTo(finalIndex);
+
+            // 显示结果弹窗
+            setTimeout(() => {
+                showResult(player);
+                createParticles();
+            }, 400);
+
+            isAnimating = false;
+            btn.disabled = false;
+        }
+
+        // 显示结果
+        function showResult(player) {
+            const modal = document.getElementById('resultModal');
+
+            document.getElementById('resultBadge').textContent = player.rarity;
+            document.getElementById('resultBadge').className = `result-badge rarity-${player.rarity}`;
+            document.getElementById('resultAvatar').textContent = player.emoji;
+            document.getElementById('resultName').textContent = player.name;
+            document.getElementById('resultTeam').textContent = `${player.team} | ${player.nickname}`;
+            document.getElementById('stat1').textContent = player.stats[0];
+            document.getElementById('stat2').textContent = player.stats[1];
+            document.getElementById('stat3').textContent = player.stats[2];
+
+            modal.classList.add('show');
+        }
+
+        // 关闭结果
+        function closeResult() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        // 创建粒子效果
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#00d4ff', '#00fff9', '#ffd700', '#ff6b35'];
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = '50%';
+                particle.style.top = '50%';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(particle);
+
+                const angle = (Math.PI * 2 * i) / 30;
+                const velocity = 100 + Math.random() * 200;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                particle.animate([
+                    { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+                    { opacity: 0, transform: `translate(calc(-50% + ${vx}px), calc(-50% + ${vy}px)) scale(0)` }
+                ], {
+                    duration: 1000 + Math.random() * 500,
+                    easing: 'cubic-bezier(0, 0.5, 0.5, 1)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            const container = document.getElementById('sliderContainer');
+
+            // 触摸事件
+            container.addEventListener('touchstart', handleTouchStart, { passive: true });
+            container.addEventListener('touchmove', handleTouchMove, { passive: true });
+            container.addEventListener('touchend', handleTouchEnd);
+
+            // 鼠标事件（桌面端兼容）
+            container.addEventListener('mousedown', handleMouseDown);
+
+            // 按钮事件
+            document.getElementById('btnRandom').addEventListener('click', randomSelect);
+            document.getElementById('btnConfirm').addEventListener('click', closeResult);
+
+            // 指示器点击
+            document.getElementById('indicators').addEventListener('click', (e) => {
+                if (e.target.classList.contains('dot')) {
+                    const index = parseInt(e.target.dataset.index);
+                    slideTo(index);
+                }
+            });
+
+            // 窗口大小改变
+            window.addEventListener('resize', () => {
+                slideTo(currentIndex);
+            });
+        }
+
+        // 触摸开始
+        function handleTouchStart(e) {
+            startX = e.touches[0].clientX;
+            isAnimating = false;
+        }
+
+        // 触摸移动
+        function handleTouchMove(e) {
+            if (isAnimating) return;
+
+            const currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+
+            const track = document.getElementById('sliderTrack');
+            track.style.transition = 'none';
+            track.style.transform = `translateX(${prevTranslate + diff}px)`;
+        }
+
+        // 触摸结束
+        function handleTouchEnd(e) {
+            const track = document.getElementById('sliderTrack');
+            track.style.transition = '';
+
+            const endX = e.changedTouches[0].clientX;
+            const diff = endX - startX;
+
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    slideTo(currentIndex - 1);
+                } else {
+                    slideTo(currentIndex + 1);
+                }
+            } else {
+                slideTo(currentIndex);
+            }
+
+            prevTranslate = -currentIndex * window.innerWidth;
+        }
+
+        // 鼠标事件处理
+        function handleMouseDown(e) {
+            startX = e.clientX;
+            isAnimating = false;
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleMouseMove(e) {
+            if (isAnimating) return;
+
+            const diff = e.clientX - startX;
+            const track = document.getElementById('sliderTrack');
+            track.style.transition = 'none';
+            track.style.transform = `translateX(${prevTranslate + diff}px)`;
+        }
+
+        function handleMouseUp(e) {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            const track = document.getElementById('sliderTrack');
+            track.style.transition = '';
+
+            const diff = e.clientX - startX;
+
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    slideTo(currentIndex - 1);
+                } else {
+                    slideTo(currentIndex + 1);
+                }
+            } else {
+                slideTo(currentIndex);
+            }
+
+            prevTranslate = -currentIndex * window.innerWidth;
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

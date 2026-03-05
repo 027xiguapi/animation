@@ -1226,7 +1226,7 @@
             
             // 初始化球队数据
             initTeamData();
-            
+                        
             // 隐藏配置框
             document.getElementById('configModal').classList.add('hidden');
             
@@ -1234,8 +1234,8 @@
             if (shouldRecord) {
                 try {
                     await startRecording();
-                    // 录屏开始后，等待 500ms 再显示内容
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // 录屏开始后，等待 1500ms 确保录屏真正开始捕获画面
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 } catch (error) {
                     console.error('录屏启动失败:', error);
                     // 即使录屏失败，也继续显示内容
