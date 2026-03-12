@@ -98,21 +98,56 @@
 		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 		// 数据 - 按GDP从低到高排序（攀登顺序）
-		const cityData = [
-			{ name: '天津', gdp: 18200, color: 0x8338ec, rank: 10 },
-			{ name: '南京', gdp: 19800, color: 0xffbe0b, rank: 9 },
-			{ name: '武汉', gdp: 21500, color: 0xfb5607, rank: 8 },
-			{ name: '杭州', gdp: 22100, color: 0x06ffa5, rank: 7 },
-			{ name: '成都', gdp: 24800, color: 0x3a86ff, rank: 6 },
-			{ name: '重庆', gdp: 31500, color: 0xff006e, rank: 5 },
-			{ name: '广州', gdp: 32800, color: 0x8338ec, rank: 4 },
-			{ name: '深圳', gdp: 38500, color: 0xffbe0b, rank: 3 },
-			{ name: '北京', gdp: 49800, color: 0xfb5607, rank: 2 },
-			{ name: '上海', gdp: 52000, color: 0x00d4ff, rank: 1 }
+		const lang = 'zh'; // 语言设置
+		const metroCitiesData = [
+			{ name: lang === 'zh' ? '乌鲁木齐地铁' : 'Urumqi Metro', id: 92, code: 'wulumuqi', iconSrc: 'metro_icons/wulumuqi.png', gdp: 3800, color: 0x8338ec, rank: 45 },
+			{ name: lang === 'zh' ? '呼和浩特地铁' : 'Hohhot Metro', id: 105, code: 'huhehaote', iconSrc: 'metro_icons/huhehaote.jpg', gdp: 3900, color: 0xffbe0b, rank: 44 },
+			{ name: lang === 'zh' ? '兰州地铁' : 'Lanzhou Metro', id: 107, code: 'lanzhou', iconSrc: 'metro_icons/lanzhou.jpg', gdp: 4100, color: 0xfb5607, rank: 43 },
+			{ name: lang === 'zh' ? '洛阳地铁' : 'Luoyang Metro', id: 108, code: 'luoyang', iconSrc: 'metro_icons/luoyang.png', gdp: 5800, color: 0x06ffa5, rank: 42 },
+			{ name: lang === 'zh' ? '绍兴地铁' : 'Shaoxing Metro', id: 110, code: 'shaoxing', iconSrc: 'metro_icons/shaoxing.jpg', gdp: 7400, color: 0x3a86ff, rank: 41 },
+			{ name: lang === 'zh' ? '温州地铁' : 'Wenzhou Metro', id: 93, code: 'wenzhou', iconSrc: 'metro_icons/wenzhou.png', gdp: 8700, color: 0xff006e, rank: 40 },
+			{ name: lang === 'zh' ? '徐州地铁' : 'Xuzhou Metro', id: 117, code: 'xuzhou', iconSrc: 'metro_icons/xuzhou.jpg', gdp: 8900, color: 0x8338ec, rank: 39 },
+			{ name: lang === 'zh' ? '南昌地铁' : 'Nanchang Metro', id: 81, code: 'nanchang', iconSrc: 'metro_icons/nanchang.png', gdp: 7600, color: 0xffbe0b, rank: 38 },
+			{ name: lang === 'zh' ? '贵阳地铁' : 'Guiyang Metro', id: 74, code: 'guiyang', iconSrc: 'metro_icons/guiyang.png', gdp: 5600, color: 0xfb5607, rank: 37 },
+			{ name: lang === 'zh' ? '太原地铁' : 'Taiyuan Metro', id: 111, code: 'taiyuan', iconSrc: 'metro_icons/taiyuan.jpg', gdp: 5900, color: 0x06ffa5, rank: 36 },
+			{ name: lang === 'zh' ? '石家庄地铁' : 'Shijiazhuang Metro', id: 89, code: 'shijiazhuang', iconSrc: 'metro_icons/shijiazhuang.jpg', gdp: 7500, color: 0x3a86ff, rank: 35 },
+			{ name: lang === 'zh' ? '哈尔滨地铁' : 'Harbin Metro', id: 76, code: 'haerbin', iconSrc: 'metro_icons/haerbin.jpg', gdp: 5600, color: 0xff006e, rank: 34 },
+			{ name: lang === 'zh' ? '长春地铁' : 'Changchun Metro', id: 66, code: 'changchun', iconSrc: 'metro_icons/changchun.jpg', gdp: 6800, color: 0x8338ec, rank: 33 },
+			{ name: lang === 'zh' ? '昆明地铁' : 'Kunming Metro', id: 80, code: 'kunming', iconSrc: 'metro_icons/kunming.jpg', gdp: 8300, color: 0xffbe0b, rank: 32 },
+			{ name: lang === 'zh' ? '南宁地铁' : 'Nanning Metro', id: 83, code: 'nanning', iconSrc: 'metro_icons/nanning.jpg', gdp: 5800, color: 0xfb5607, rank: 31 },
+			{ name: lang === 'zh' ? '福州地铁' : 'Fuzhou Metro', id: 72, code: 'fuzhou', iconSrc: 'metro_icons/fuzhou.png', gdp: 13200, color: 0x06ffa5, rank: 30 },
+			{ name: lang === 'zh' ? '常州地铁' : 'Changzhou Metro', id: 101, code: 'changzhou', iconSrc: 'metro_icons/changzhou.png', gdp: 10100, color: 0x3a86ff, rank: 29 },
+			{ name: lang === 'zh' ? '无锡地铁' : 'Wuxi Metro', id: 95, code: 'wuxi', iconSrc: 'metro_icons/wuxi.jpg', gdp: 15600, color: 0xff006e, rank: 28 },
+			{ name: lang === 'zh' ? '宁波地铁' : 'Ningbo Metro', id: 84, code: 'ningbo', iconSrc: 'metro_icons/ningbo.jpg', gdp: 16900, color: 0x8338ec, rank: 27 },
+			{ name: lang === 'zh' ? '沈阳地铁' : 'Shenyang Metro', id: 87, code: 'shenyang', iconSrc: 'metro_icons/shenyang.jpg', gdp: 8100, color: 0xffbe0b, rank: 26 },
+			{ name: lang === 'zh' ? '大连地铁' : 'Dalian Metro', id: 70, code: 'dalian', iconSrc: 'metro_icons/dalian.jpg', gdp: 8400, color: 0xfb5607, rank: 25 },
+			{ name: lang === 'zh' ? '合肥地铁' : 'Hefei Metro', id: 77, code: 'hefei', iconSrc: 'metro_icons/hefei.png', gdp: 12600, color: 0x06ffa5, rank: 24 },
+			{ name: lang === 'zh' ? '佛山地铁' : 'Foshan Metro', id: 104, code: 'foshan', iconSrc: 'metro_icons/foshan.png', gdp: 13700, color: 0x3a86ff, rank: 23 },
+			{ name: lang === 'zh' ? '东莞地铁' : 'Dongguan Metro', id: 71, code: 'dongguan', iconSrc: 'metro_icons/dongguan.png', gdp: 11600, color: 0xff006e, rank: 22 },
+			{ name: lang === 'zh' ? '济南地铁' : 'Jinan Metro', id: 79, code: 'jinan', iconSrc: 'metro_icons/jinan.jpg', gdp: 13000, color: 0x8338ec, rank: 21 },
+			{ name: lang === 'zh' ? '青岛地铁' : 'Qingdao Metro', id: 85, code: 'qingdao', iconSrc: 'metro_icons/qingdao.jpg', gdp: 15800, color: 0xffbe0b, rank: 20 },
+			{ name: lang === 'zh' ? '郑州地铁' : 'Zhengzhou Metro', id: 98, code: 'zhengzhou', iconSrc: 'metro_icons/zhengzhou.jpg', gdp: 13600, color: 0xfb5607, rank: 19 },
+			{ name: lang === 'zh' ? '长沙地铁' : 'Changsha Metro', id: 67, code: 'changsha', iconSrc: 'metro_icons/changsha.jpg', gdp: 14600, color: 0x06ffa5, rank: 18 },
+			{ name: lang === 'zh' ? '厦门地铁' : 'Xiamen Metro', id: 96, code: 'xiamen', iconSrc: 'metro_icons/xiamen.jpg', gdp: 8000, color: 0x3a86ff, rank: 17 },
+			{ name: lang === 'zh' ? '苏州地铁' : 'Suzhou Metro', id: 90, code: 'suzhou', iconSrc: 'metro_icons/suzhou.png', gdp: 24700, color: 0xff006e, rank: 16 },
+			{ name: lang === 'zh' ? '西安地铁' : "Xi'an Metro", id: 97, code: 'xian', iconSrc: 'metro_icons/xian.jpg', gdp: 12100, color: 0x8338ec, rank: 15 },
+			{ name: lang === 'zh' ? '天津地铁' : 'Tianjin Metro', id: 91, code: 'tianjin', iconSrc: 'metro_icons/tianjin.jpg', gdp: 16700, color: 0xffbe0b, rank: 14 },
+			{ name: lang === 'zh' ? '南京地铁' : 'Nanjing Metro', id: 82, code: 'nanjing', iconSrc: 'metro_icons/nanjing.jpg', gdp: 17400, color: 0xfb5607, rank: 13 },
+			{ name: lang === 'zh' ? '武汉地铁' : 'Wuhan Metro', id: 94, code: 'wuhan', iconSrc: 'metro_icons/wuhan.jpg', gdp: 20000, color: 0x06ffa5, rank: 12 },
+			{ name: lang === 'zh' ? '杭州地铁' : 'Hangzhou Metro', id: 75, code: 'hangzhou', iconSrc: 'metro_icons/hangzhou.jpg', gdp: 19900, color: 0x3a86ff, rank: 11 },
+			{ name: lang === 'zh' ? '成都地铁' : 'Chengdu Metro', id: 68, code: 'chengdu', iconSrc: 'metro_icons/chengdu.png', gdp: 22400, color: 0xff006e, rank: 10 },
+			{ name: lang === 'zh' ? '重庆地铁' : 'Chongqing Metro', id: 69, code: 'chongqing', iconSrc: 'metro_icons/chongqing.png', gdp: 30500, color: 0x8338ec, rank: 9 },
+			{ name: lang === 'zh' ? '广州地铁' : 'Guangzhou Metro', id: 73, code: 'guangzhou', iconSrc: 'metro_icons/guangzhou.jpg', gdp: 30500, color: 0xffbe0b, rank: 8 },
+			{ name: lang === 'zh' ? '深圳地铁' : 'Shenzhen Metro', id: 88, code: 'shenzhen', iconSrc: 'metro_icons/shenzhen.jpg', gdp: 34600, color: 0xfb5607, rank: 7 },
+			{ name: lang === 'zh' ? '香港地铁' : 'Hong Kong Metro', id: 78, code: 'hongkong', iconSrc: 'metro_icons/hongkong.jpg', gdp: 29000, color: 0x06ffa5, rank: 6 },
+			{ name: lang === 'zh' ? '台湾地铁' : 'Taiwan Metro', id: 57, code: 'taiwan', iconSrc: 'metro_icons/taiwan.png', gdp: 75000, color: 0x3a86ff, rank: 5 },
+			{ name: lang === 'zh' ? '澳门地铁' : 'Macau Metro', id: 100, code: 'macau', iconSrc: 'metro_icons/macau.png', gdp: 3500, color: 0xff006e, rank: 4 },
+			{ name: lang === 'zh' ? '北京地铁' : 'Beijing Subway', id: 65, code: 'beijing', iconSrc: 'metro_icons/beijing.jpg', gdp: 43800, color: 0x8338ec, rank: 3 },
+			{ name: lang === 'zh' ? '上海地铁' : 'Shanghai Metro', id: 86, code: 'shanghai', iconSrc: 'metro_icons/shanghai.jpg', gdp: 47700, color: 0xffbe0b, rank: 2 },
 		];
 
 		const CONFIG = {
-			maxHeight: 30,
+			maxHeight: 300,
 			baseWidth: 4,
 			spacing: 8,
 			climbDuration: 3,
@@ -272,7 +307,7 @@
 			const loader = new GLTFLoader();
 
 			// 计算铁塔位置（在最左边柱子的左侧）
-			const totalWidth = (cityData.length - 1) * CONFIG.linearSpacing;
+			const totalWidth = (metroCitiesData.length - 1) * CONFIG.linearSpacing;
 			const leftmostBarX = -totalWidth / 2;
 			const towerX = leftmostBarX - CONFIG.linearSpacing * 1.5; // 在最左边再往左一些
 
@@ -315,10 +350,13 @@
 		}
 
 		function createBars () {
-			const maxGDP = cityData[cityData.length - 1].gdp;
-			const totalWidth = (cityData.length - 1) * CONFIG.linearSpacing;
+			// 先按GDP从小到大排序
+			metroCitiesData.sort((a, b) => a.gdp - b.gdp);
+			
+			const maxGDP = metroCitiesData[metroCitiesData.length - 1].gdp;
+			const totalWidth = (metroCitiesData.length - 1) * CONFIG.linearSpacing;
 
-			cityData.forEach((city, index) => {
+			metroCitiesData.forEach((city, index) => {
 				const height = (city.gdp / maxGDP) * CONFIG.maxHeight;
 				// 线性排列：从左到右
 				const x = index * CONFIG.linearSpacing - totalWidth / 2;
@@ -368,28 +406,57 @@
 			canvas.height = 640;
 			const ctx = canvas.getContext('2d');
 
-			// 1. 关键修改：清除 Canvas 背景，确保其完全透明
+			// 清除 Canvas 背景，确保其完全透明
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-			// 2. 绘制文字（可以保留阴影，让文字在复杂背景下更清晰）
+			// 加载并绘制城市图标
+			const icon = new Image();
+			icon.crossOrigin = 'anonymous';
+			icon.onload = function() {
+				// 绘制圆形图标
+				const iconSize = 120;
+				const iconX = canvas.width / 2;
+				const iconY = 100;
+
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(iconX, iconY, iconSize / 2, 0, Math.PI * 2);
+				ctx.closePath();
+				ctx.clip();
+				ctx.drawImage(icon, iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize);
+				ctx.restore();
+
+				// 绘制图标边框
+				ctx.strokeStyle = '#ffffff';
+				ctx.lineWidth = 4;
+				ctx.beginPath();
+				ctx.arc(iconX, iconY, iconSize / 2, 0, Math.PI * 2);
+				ctx.stroke();
+
+				// 更新纹理
+				texture.needsUpdate = true;
+			};
+			icon.src = city.iconSrc;
+
+			// 绘制文字（带阴影）
 			ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
 			ctx.shadowBlur = 10;
 
 			// 城市名称
 			ctx.fillStyle = '#ffffff';
-			ctx.font = 'bold 64px Arial';
+			ctx.font = 'bold 48px Arial';
 			ctx.textAlign = 'center';
-			ctx.fillText(city.name, canvas.width / 2, 85);
+			ctx.fillText(city.name, canvas.width / 2, 220);
 
 			// "GDP" 标签
 			ctx.fillStyle = '#ffd700';
-			ctx.font = 'bold 42px Arial';
-			ctx.fillText('GDP', canvas.width / 2, 220);
+			ctx.font = 'bold 36px Arial';
+			ctx.fillText('GDP', canvas.width / 2, 280);
 
 			// GDP 数值
 			ctx.fillStyle = '#ffd700';
-			ctx.font = 'bold 96px Arial';
-			ctx.fillText(`${(city.gdp / 10000).toFixed(2)}万亿`, canvas.width / 2, 360);
+			ctx.font = 'bold 72px Arial';
+			ctx.fillText(`${(city.gdp / 10000).toFixed(2)}万亿`, canvas.width / 2, 380);
 
 			// 底部排名
 			ctx.fillStyle = '#ffffff';
@@ -399,22 +466,20 @@
 			const texture = new THREE.CanvasTexture(canvas);
 			texture.needsUpdate = true;
 
-			const panelWidth = CONFIG.baseWidth * 1.5; // 稍微调宽一点，因为没有背景框了
+			const panelWidth = CONFIG.baseWidth * 1.5;
 			const panelHeight = 7.5;
 
 			const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
 
-			// 3. 材质修改：开启透明支持
-			const panelMaterial = new THREE.MeshBasicMaterial({ // 使用 Basic 材质不受阴影影响，文字更亮
+			const panelMaterial = new THREE.MeshBasicMaterial({
 				map: texture,
-				transparent: true,  // 必须开启
-				alphaTest: 0.1,     // 过滤掉极其微小的透明像素，防止深度冲突
+				transparent: true,
+				alphaTest: 0.1,
 				side: THREE.DoubleSide
 			});
 
 			const panel = new THREE.Mesh(panelGeometry, panelMaterial);
 
-			// 将面板位置稍微往前挪一点，防止与实心柱子重合产生闪烁
 			panel.position.set(x, height - panelHeight / 2, z + CONFIG.baseWidth / 2 + 0.1);
 
 			scene.add(panel);
