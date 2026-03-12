@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - morphtargets - MD2 controls</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="https://threejs.org/examples/main.css">
+	<style>
+		body {
+			background-color: #fff;
+			color: #444;
+		}
+
+		a {
+			color: #08f;
+		}
+
+		#controls {
+			position: fixed;
+			bottom: 30px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			gap: 12px;
+			z-index: 100;
+		}
+
+		#controls button {
+			padding: 12px 24px;
+			font-size: 15px;
+			font-weight: 600;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		}
+
+		#controls button:first-child {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+		}
+
+		#controls button:nth-child(2) {
+			background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+			color: white;
+		}
+
+		#controls button:last-child {
+			background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+			color: white;
+		}
+
+		#controls button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+		}
+
+		#controls button:active {
+			transform: translateY(0);
+		}
+
+		#controls button:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			transform: none;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="controls">
+		<button id="startBtn" onclick="startClimbing()">▶ 开始攀升</button>
+		<button onclick="skipToTop()">⏭ 直达顶部</button>
+		<button onclick="resetView()">↺ 重置</button>
+	</div>
+
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+			}
+		}
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+	<script type="module">
+
+		import * as THREE from 'three';
+
+		import Stats from 'three/addons/libs/stats.module.js';
+
+		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { MD2CharacterComplex } from 'three/addons/misc/MD2CharacterComplex.js';
+		import { Gyroscope } from 'three/addons/misc/Gyroscope.js';
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+		// 数据 - 按GDP从低到高排序（攀登顺序）
+		const cityData = [
+			{ name: '天津', gdp: 18200, color: 0x8338ec, rank: 10 },
+			{ name: '南京', gdp: 19800, color: 0xffbe0b, rank: 9 },
+			{ name: '武汉', gdp: 21500, color: 0xfb5607, rank: 8 },
+			{ name: '杭州', gdp: 22100, color: 0x06ffa5, rank: 7 },
+			{ name: '成都', gdp: 24800, color: 0x3a86ff, rank: 6 },
+			{ name: '重庆', gdp: 31500, color: 0xff006e, rank: 5 },
+			{ name: '广州', gdp: 32800, color: 0x8338ec, rank: 4 },
+			{ name: '深圳', gdp: 38500, color: 0xffbe0b, rank: 3 },
+			{ name: '北京', gdp: 49800, color: 0xfb5607, rank: 2 },
+			{ name: '上海', gdp: 52000, color: 0x00d4ff, rank: 1 }
+		];
+
+		const CONFIG = {
+			maxHeight: 30,
+			baseWidth: 4,
+			spacing: 8,
+			climbDuration: 3,
+			spiralRadius: 12,
+			linearSpacing: 6  // 线性排列的间距（改近一些）
+		};
+
+		let bars = [];
+		let labels = [];
+		let isAnimating = false;
+		let currentBarIndex = -1;
+		let eiffelTower = null;
+		let cameraTarget = new THREE.Vector3(0, 0, 0);
+
+		let SCREEN_WIDTH = window.innerWidth;
+		let SCREEN_HEIGHT = window.innerHeight;
+
+		let container, stats;
+		let camera, scene, renderer;
+
+		let cameraControls;
+
+		const controls = {
+
+			moveForward: false,
+			moveBackward: false,
+			moveLeft: false,
+			moveRight: false
+
+		};
+
+		const clock = new THREE.Clock();
+
+		init();
+
+		function init () {
+
+			container = document.createElement('div');
+			document.body.appendChild(container);
+
+			// CAMERA
+			camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+			// 将 Z 轴拉远（比如 100），Y 轴提升（比如 30），确保能平视所有柱子
+			camera.position.set(0, 30, 100);
+
+			// SCENE
+
+			scene = new THREE.Scene();
+			// 加载天空图片，避免拉伸
+			const textureLoader = new THREE.TextureLoader();
+			textureLoader.load('img/tk.jpg', function(texture) {
+				// 使用 CSS background-size: cover 类似的逻辑
+				const imgAspect = texture.image.width / texture.image.height;
+				const windowAspect = window.innerWidth / window.innerHeight;
+				
+				let scale, offsetX, offsetY;
+				
+				if (windowAspect > imgAspect) {
+					// 窗口更宽，按高度适配（图片撑满高度，宽度超出）
+					scale = windowAspect / imgAspect;
+					offsetX = 0;
+					offsetY = 0;
+				} else {
+					// 窗口更高，按宽度适配（图片撑满宽度，高度超出）
+					scale = imgAspect / windowAspect;
+					offsetX = 0;
+					offsetY = 0;
+				}
+				
+				texture.repeat.set(1 / scale, 1 / scale);
+				
+				if (windowAspect > imgAspect) {
+					texture.offset.x = (scale - 1) / 2;
+				} else {
+					texture.offset.y = (scale - 1) / 2;
+				}
+				
+				scene.background = texture;
+			});
+			scene.fog = new THREE.Fog(0xffffff, 1000, 4000);
+
+			scene.add(camera);
+
+			// LIGHTS
+
+			scene.add(new THREE.AmbientLight(0x666666, 3));
+
+			const light = new THREE.DirectionalLight(0xffffff, 7);
+			light.position.set(200, 450, 500);
+
+			light.castShadow = true;
+
+			light.shadow.mapSize.width = 1024;
+			light.shadow.mapSize.height = 512;
+
+			light.shadow.camera.near = 100;
+			light.shadow.camera.far = 1200;
+
+			light.shadow.camera.left = - 1000;
+			light.shadow.camera.right = 1000;
+			light.shadow.camera.top = 350;
+			light.shadow.camera.bottom = - 350;
+
+			scene.add(light);
+			// scene.add( new THREE.CameraHelper( light.shadow.camera ) );
+
+
+			//  GROUND
+
+			const gt = new THREE.TextureLoader().load('img/grasslight-big.jpg');
+			const gg = new THREE.PlaneGeometry(16000, 16000);
+			const gm = new THREE.MeshPhongMaterial({ color: 0xffffff, map: gt });
+
+			const ground = new THREE.Mesh(gg, gm);
+			ground.rotation.x = - Math.PI / 2;
+			ground.material.map.repeat.set(64, 64);
+			ground.material.map.wrapS = THREE.RepeatWrapping;
+			ground.material.map.wrapT = THREE.RepeatWrapping;
+			ground.material.map.colorSpace = THREE.SRGBColorSpace;
+			// note that because the ground does not cast a shadow, .castShadow is left false
+			ground.receiveShadow = true;
+
+			scene.add(ground);
+
+			// RENDERER
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+			renderer.setAnimationLoop(animate);
+			container.appendChild(renderer.domElement);
+
+			//
+
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFShadowMap;
+
+			// STATS
+
+			stats = new Stats();
+			container.appendChild(stats.dom);
+
+			// EVENTS
+
+			window.addEventListener('resize', onWindowResize);
+
+			cameraControls = new OrbitControls(camera, renderer.domElement);
+			cameraControls.target.set(0, 15, 0);
+			cameraControls.update();
+			cameraControls.enabled = false;
+
+			createEiffelTower(); // 创建埃菲尔铁塔
+			createBars();
+		}
+
+		function createEiffelTower () {
+			const loader = new GLTFLoader();
+
+			// 计算铁塔位置（在最左边柱子的左侧）
+			const totalWidth = (cityData.length - 1) * CONFIG.linearSpacing;
+			const leftmostBarX = -totalWidth / 2;
+			const towerX = leftmostBarX - CONFIG.linearSpacing * 1.5; // 在最左边再往左一些
+
+			loader.load('model/pioche.glb', function (gltf) {
+				const model = gltf.scene;
+
+				// 设置模型位置
+				model.position.set(towerX, 0, 0);
+
+				// 可以调整模型的缩放比例
+				model.scale.set(5, 5, 5); // 根据实际模型大小调整
+
+				// 启用阴影
+				model.traverse(function (node) {
+					if (node.isMesh) {
+						node.castShadow = true;
+						node.receiveShadow = true;
+					}
+				});
+
+				scene.add(model);
+
+				// 获取模型的边界框来计算高度
+				const box = new THREE.Box3().setFromObject(model);
+				const height = box.max.y - box.min.y;
+
+				eiffelTower = {
+					group: model,
+					height: height,
+					x: towerX,
+					z: 0,
+				};
+
+				console.log('铁塔模型加载成功，高度:', height);
+			}, function (xhr) {
+				console.log((xhr.loaded / xhr.total * 100) + '% 已加载');
+			}, function (error) {
+				console.error('加载铁塔模型时出错:', error);
+			});
+		}
+
+		function createBars () {
+			const maxGDP = cityData[cityData.length - 1].gdp;
+			const totalWidth = (cityData.length - 1) * CONFIG.linearSpacing;
+
+			cityData.forEach((city, index) => {
+				const height = (city.gdp / maxGDP) * CONFIG.maxHeight;
+				// 线性排列：从左到右
+				const x = index * CONFIG.linearSpacing - totalWidth / 2;
+				const z = 0;  // 所有柱子在同一条线上
+
+				const geometry = new THREE.BoxGeometry(CONFIG.baseWidth, height, CONFIG.baseWidth);
+				geometry.translate(0, height / 2, 0);
+
+				const material = new THREE.MeshPhysicalMaterial({
+					color: city.color,
+					metalness: 0.1,
+					roughness: 0.1,
+					thickness: 1,
+					clearcoat: 1,
+					clearcoatRoughness: 0.1,
+					emissive: city.color,
+					emissiveIntensity: 0.2
+				});
+
+				const bar = new THREE.Mesh(geometry, material);
+				bar.position.set(x, 0, z);
+				bar.castShadow = true;
+				bar.receiveShadow = true;
+
+				bar.userData = {
+					city: city.name,
+					gdp: city.gdp,
+					targetHeight: height,
+					rank: city.rank,
+					color: city.color,
+					x: x,
+					z: z,
+					index: index
+				};
+
+				scene.add(bar);
+				bars.push(bar);
+
+				// 保存引用以便后续动画
+				createLabel(city, x, z, height);
+			});
+		}
+
+		function createLabel (city, x, z, height) {
+			const canvas = document.createElement('canvas');
+			canvas.width = 512;
+			canvas.height = 640;
+			const ctx = canvas.getContext('2d');
+
+			// 1. 关键修改：清除 Canvas 背景，确保其完全透明
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			// 2. 绘制文字（可以保留阴影，让文字在复杂背景下更清晰）
+			ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+			ctx.shadowBlur = 10;
+
+			// 城市名称
+			ctx.fillStyle = '#ffffff';
+			ctx.font = 'bold 64px Arial';
+			ctx.textAlign = 'center';
+			ctx.fillText(city.name, canvas.width / 2, 85);
+
+			// "GDP" 标签
+			ctx.fillStyle = '#ffd700';
+			ctx.font = 'bold 42px Arial';
+			ctx.fillText('GDP', canvas.width / 2, 220);
+
+			// GDP 数值
+			ctx.fillStyle = '#ffd700';
+			ctx.font = 'bold 96px Arial';
+			ctx.fillText(`${(city.gdp / 10000).toFixed(2)}万亿`, canvas.width / 2, 360);
+
+			// 底部排名
+			ctx.fillStyle = '#ffffff';
+			ctx.font = 'bold 48px Arial';
+			ctx.fillText(`#${city.rank}`, canvas.width / 2, 520);
+
+			const texture = new THREE.CanvasTexture(canvas);
+			texture.needsUpdate = true;
+
+			const panelWidth = CONFIG.baseWidth * 1.5; // 稍微调宽一点，因为没有背景框了
+			const panelHeight = 7.5;
+
+			const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+
+			// 3. 材质修改：开启透明支持
+			const panelMaterial = new THREE.MeshBasicMaterial({ // 使用 Basic 材质不受阴影影响，文字更亮
+				map: texture,
+				transparent: true,  // 必须开启
+				alphaTest: 0.1,     // 过滤掉极其微小的透明像素，防止深度冲突
+				side: THREE.DoubleSide
+			});
+
+			const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+
+			// 将面板位置稍微往前挪一点，防止与实心柱子重合产生闪烁
+			panel.position.set(x, height - panelHeight / 2, z + CONFIG.baseWidth / 2 + 0.1);
+
+			scene.add(panel);
+
+			labels.push({
+				mesh: panel,
+				position: new THREE.Vector3(x, height - panelHeight / 2, z + CONFIG.baseWidth / 2 + 0.1),
+				basePosition: new THREE.Vector3(x, 0, z)
+			});
+		}
+
+		async function startClimbing () {
+			if (isAnimating) return;
+
+			// 等待铁塔模型加载完成
+			if (!eiffelTower) {
+				console.log('等待铁塔模型加载...');
+				await new Promise(resolve => {
+					const checkInterval = setInterval(() => {
+						if (eiffelTower) {
+							clearInterval(checkInterval);
+							resolve();
+						}
+					}, 100);
+					// 超时保护：5秒后强制继续
+					setTimeout(() => {
+						clearInterval(checkInterval);
+						resolve();
+					}, 5000);
+				});
+			}
+
+			isAnimating = true;
+			document.getElementById('startBtn').disabled = true;
+
+			// 设置初始相机位置（从埃菲尔铁塔开始）
+			const initialZ = 15; // 固定的Z位置（正前方）
+			const towerViewHeight = eiffelTower ? eiffelTower.height * 0.6 : 15;
+			camera.position.set(eiffelTower.x, towerViewHeight, initialZ);
+
+			// 更新 cameraTarget 为埃菲尔铁塔的位置
+			cameraTarget.set(eiffelTower.x, towerViewHeight, eiffelTower.z);
+			camera.lookAt(cameraTarget);
+
+			// 在铁塔处停留一下
+			await new Promise(resolve => setTimeout(resolve, 1500));
+
+			// 依次遍历每个柱子
+			for (let i = 0; i < bars.length; i++) {
+				currentBarIndex = i;
+				const bar = bars[i];
+				const targetHeight = bar.userData.targetHeight;
+
+				// 生长柱子
+				// growBar(i);
+
+				// 镜头只进行水平和垂直移动，保持Z位置不变
+				await new Promise(resolve => {
+					// 同时动画相机位置和目标点
+					gsap.to(camera.position, {
+						x: bar.userData.x,
+						y: targetHeight,
+						duration: CONFIG.climbDuration,
+						ease: "power2.inOut",
+						onComplete: resolve
+					});
+
+					// 让 cameraTarget 也跟随动画，始终看向柱子顶部
+					gsap.to(cameraTarget, {
+						x: bar.userData.x,
+						y: targetHeight,
+						z: bar.userData.z,
+						duration: CONFIG.climbDuration,
+						ease: "power2.inOut"
+					});
+				});
+
+				// 短暂停留
+				await new Promise(resolve => setTimeout(resolve, 500));
+			}
+
+			// 完成后稍微拉远镜头，展示全景
+			await new Promise(resolve => {
+				gsap.to(camera.position, {
+					x: 0,
+					y: CONFIG.maxHeight + 10,
+					z: 50,
+					duration: 2,
+					ease: "power2.out",
+					onUpdate: () => {
+						camera.lookAt(0, CONFIG.maxHeight / 2, 0);
+					},
+					onComplete: () => {
+						controls.enabled = true;
+						resolve();
+					}
+				});
+			});
+
+		}
+
+		// EVENT HANDLERS
+
+		function onWindowResize () {
+
+			SCREEN_WIDTH = window.innerWidth;
+			SCREEN_HEIGHT = window.innerHeight;
+
+			renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+			camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+			camera.updateProjectionMatrix();
+
+		}
+
+
+		function animate () {
+
+			render();
+
+			stats.update();
+
+		}
+
+		function render () {
+
+			const delta = clock.getDelta();
+
+			renderer.render(scene, camera);
+
+		}
+
+		window.startClimbing = startClimbing;
+	</script>
+
+</body>
+
+</html>
