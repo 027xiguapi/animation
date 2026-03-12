@@ -287,8 +287,8 @@
 
 			// STATS
 
-			stats = new Stats();
-			container.appendChild(stats.dom);
+			// stats = new Stats();
+			// container.appendChild(stats.dom);
 
 			// EVENTS
 
@@ -514,6 +514,9 @@
 
 			isAnimating = true;
 			document.getElementById('startBtn').disabled = true;
+			
+			// 隐藏控制按钮
+			document.getElementById('controls').style.display = 'none';
 
 			// 设置初始相机位置（从埃菲尔铁塔开始）
 			const initialZ = 15; // 固定的Z位置（正前方）
@@ -574,11 +577,61 @@
 					},
 					onComplete: () => {
 						controls.enabled = true;
+						// 重新显示控制按钮
+						document.getElementById('controls').style.display = 'flex';
+						document.getElementById('startBtn').disabled = false;
+						isAnimating = false;
 						resolve();
 					}
 				});
 			});
 
+		}
+
+		function skipToTop() {
+			if (isAnimating) return;
+			
+			// 隐藏控制按钮
+			document.getElementById('controls').style.display = 'none';
+			
+			// 直接跳到最高点
+			const maxHeight = CONFIG.maxHeight;
+			gsap.to(camera.position, {
+				x: 0,
+				y: maxHeight + 10,
+				z: 50,
+				duration: 1,
+				ease: "power2.out",
+				onUpdate: () => {
+					camera.lookAt(0, maxHeight / 2, 0);
+				},
+				onComplete: () => {
+					cameraControls.enabled = true;
+					// 重新显示控制按钮
+					document.getElementById('controls').style.display = 'flex';
+				}
+			});
+		}
+
+		function resetView() {
+			// 重置相机位置
+			gsap.to(camera.position, {
+				x: 0,
+				y: 30,
+				z: 100,
+				duration: 1,
+				ease: "power2.out",
+				onComplete: () => {
+					cameraControls.target.set(0, 15, 0);
+					cameraControls.update();
+					cameraControls.enabled = false;
+					// 重新启用开始按钮
+					document.getElementById('startBtn').disabled = false;
+					isAnimating = false;
+					// 确保控制按钮显示
+					document.getElementById('controls').style.display = 'flex';
+				}
+			});
 		}
 
 		// EVENT HANDLERS
@@ -613,6 +666,8 @@
 		}
 
 		window.startClimbing = startClimbing;
+		window.skipToTop = skipToTop;
+		window.resetView = resetView;
 	</script>
 
 </body>
